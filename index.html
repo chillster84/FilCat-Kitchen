@@ -10,11 +10,18 @@
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/cooking.css">
+
+  <!-- Mobile DevTools Console -->
+  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+  <script>eruda.init();</script>
 </head>
 <body>
 
   <header>
-    <div class="header-title">🍳 FilCat Kitchen</div>
+    <div class="header-title">
+      🍳 FilCat Kitchen 
+      <span style="font-size:10px; background:#facc15; color:#000; padding:2px 6px; border-radius:4px; font-weight:900;">v0.2</span>
+    </div>
     <div class="header-actions">
       <span id="sync-status" style="font-size:0.75rem; background:rgba(255,255,255,0.2); padding:4px 8px; border-radius:12px; align-self:center;"></span>
       <button class="btn btn-sm btn-secondary" id="btn-open-import">📋 Paste Note</button>
@@ -26,7 +33,12 @@
     <!-- LIST VIEW -->
     <div id="section-list">
       <div class="category-scroll" id="category-container"></div>
-      <div id="cards-container"></div>
+      <div id="cards-container">
+        <!-- Visible status so you know HTML rendered -->
+        <div id="init-loader" style="text-align:center; padding:40px 20px; color:#78716c;">
+          <p>⏳ Initializing FilCat Engine...</p>
+        </div>
+      </div>
     </div>
 
     <!-- DETAIL COOKING VIEW -->
@@ -47,6 +59,7 @@
     </div>
   </div>
 
-  <script type="module" src="src/main.js"></script>
+  <!-- Cache buster ?v=2 forces phone to grab fresh JS -->
+  <script type="module" src="src/main.js?v=2"></script>
 </body>
 </html>
