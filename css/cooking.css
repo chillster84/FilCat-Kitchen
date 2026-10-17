@@ -1,0 +1,14 @@
+.scaler-container { background: #fff7ed; border: 1px solid #ffedd5; border-radius: var(--radius); padding: 14px; margin: 14px 0; }
+.scaler-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.scaler-title { font-size: 0.85rem; font-weight: 800; color: var(--primary); text-transform: uppercase; }
+.scale-btn-group { display: flex; gap: 6px; }
+.scale-opt-btn { flex: 1; padding: 8px; background: white; border: 1.5px solid #fed7aa; border-radius: 8px; font-weight: 700; color: var(--primary); cursor: pointer; text-align: center; }
+.scale-opt-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+.ingredient-row { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 1rem; display: flex; justify-content: space-between; background: white; }
+.ingredient-row:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+.ingredient-row:last-child { border-bottom: none; border-radius: 0 0 var(--radius) var(--radius); }
+.step-row { margin-bottom: 16px; line-height: 1.55; color: #292524; font-size: 1rem; padding-left: 8px; }
+
+.scratchpad-box { margin-top: 24px; background: #fefce8; border: 1.5px dashed #fef08a; border-radius: var(--radius); padding: 14px; }
+.scratchpad-box textarea { background: transparent; border: none; resize: vertical; min-height: 70px; font-size: 0.95rem; }

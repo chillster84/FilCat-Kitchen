@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#c2410c">
+  <title>FilCat Kitchen</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/cooking.css">
+</head>
+<body>
+
+  <header>
+    <div class="header-title">🍳 FilCat Kitchen</div>
+    <div class="header-actions">
+      <span id="sync-status" style="font-size:0.75rem; background:rgba(255,255,255,0.2); padding:4px 8px; border-radius:12px; align-self:center;"></span>
+      <button class="btn btn-sm btn-secondary" id="btn-open-import">📋 Paste Note</button>
+    </div>
+  </header>
+
+  <div class="container" id="app">
+    
+    <!-- LIST VIEW -->
+    <div id="section-list">
+      <div class="category-scroll" id="category-container"></div>
+      <div id="cards-container"></div>
+    </div>
+
+    <!-- DETAIL COOKING VIEW -->
+    <div id="section-detail" class="hidden"></div>
+
+  </div>
+
+  <!-- RAW NOTE TRANSLATOR MODAL -->
+  <div id="modal-import" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h3 style="margin-bottom:8px; font-weight:800;">Paste Recipe Note</h3>
+      <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">Paste raw text from your notes. FilCat will automatically parse ingredients, steps, and categorize it.</p>
+      <textarea id="input-raw-notes" rows="8" placeholder="Grandma's Stew&#10;2 lbs chuck beef cubed&#10;1 onion diced&#10;Brown beef in Dutch oven. Add vegetables and simmer 2 hours."></textarea>
+      <div style="display:flex; gap:10px; margin-top:14px;">
+        <button class="btn btn-secondary" style="flex:1;" id="btn-close-import">Cancel</button>
+        <button class="btn" style="flex:1;" id="btn-run-import">Translate & Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
