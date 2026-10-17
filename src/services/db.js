@@ -1,41 +1,62 @@
-import { db, isCloudEnabled } from "../config/firebase.js";
-import { collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { db } from "../config/firebase.js";
+import { 
+  collection, 
+  onSnapshot, 
+  doc, 
+  setDoc, 
+  deleteDoc 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-const LOCAL_KEY = "filcat_recipes";
+const STARTER_RECIPE = {
+  id: "rec-pancakes",
+  title: "Classic Diner Pancakes",
+  category: "Breakfast",
+  servings: 4,
+  time: "20 mins",
+  ingredients: [
+    "2 cups flour",
+    "1 1/2 cups milk",
+    "2 eggs",
+    "1/2 tsp salt",
+    "2 tbsp melted butter"
+  ],
+  steps: [
+    "Whisk dry ingredients together in a large bowl.",
+    "In a separate bowl, beat milk, eggs, and melted butter.",
+    "Gently combine wet and dry ingredients.",
+    "Cook on buttered skillet until bubbles appear on top, flip and finish."
+  ],
+  notes: "Chef tip: Toss blueberries directly onto the uncooked side before flipping.",
+  lastCooked: null,
+  timesCooked: 0
+};
+
+let hasSeeded = false;
 
 export function initRecipeSync(onUpdate) {
-  if (isCloudEnabled && db) {
-    const colRef = collection(db, "recipes");
-    return onSnapshot(colRef, (snapshot) => {
-      const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      onUpdate(list);
-    });
-  } else {
-    const local = JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]");
-    onUpdate(local);
-    return () => {};
-  }
+  const colRef = collection(db, "recipes");
+  
+  return onSnapshot(colRef, (snapshot) => {
+    const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // If your cloud database is totally empty, automatically seed the starter recipe
+    if (list.length === 0 && !hasSeeded) {
+      hasSeeded = true;
+      saveRecipeItem(STARTER_RECIPE);
+      return;
+    }
+
+    onUpdate(list);
+  }, (err) => {
+    console.error("Firestore sync error:", err);
+  });
 }
 
 export async function saveRecipeItem(recipe) {
-  if (isCloudEnabled && db) {
-    const ref = doc(db, "recipes", recipe.id);
-    await setDoc(ref, recipe, { merge: true });
-  } else {
-    const local = JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]");
-    const idx = local.findIndex(r => r.id === recipe.id);
-    if (idx >= 0) local[idx] = recipe;
-    else local.unshift(recipe);
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(local));
-  }
+  const ref = doc(db, "recipes", recipe.id);
+  await setDoc(ref, recipe, { merge: true });
 }
 
 export async function deleteRecipeItem(id) {
-  if (isCloudEnabled && db) {
-    await deleteDoc(doc(db, "recipes", id));
-  } else {
-    let local = JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]");
-    local = local.filter(r => r.id !== id);
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(local));
-  }
+  await deleteDoc(doc(db, "recipes",  id));
 }
