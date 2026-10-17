@@ -1,0 +1,631 @@
+name: Scaffold FilCat Kitchen
+
+on:
+  push:
+    paths:
+      - '.github/workflows/scaffold.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  scaffold:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Modular Structure
+        run: |
+          mkdir -p css src/config src/services src/components src/state
+
+          # 1. PWA MANIFEST
+          cat << 'EOF' > manifest.json
+          {
+            "name": "FilCat Kitchen",
+            "short_name": "FilCat",
+            "start_url": "./index.html",
+            "display": "standalone",
+            "background_color": "#fdfbf7",
+            "theme_color": "#c2410c",
+            "icons": [
+              {
+                "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍳</text></svg>",
+                "sizes": "192x192 512x512",
+                "type": "image/svg+xml"
+              }
+            ]
+          }
+          EOF
+
+          # 2. CSS STYLES
+          cat << 'EOF' > css/variables.css
+          :root {
+            --primary: #c2410c;
+            --primary-hover: #9a3412;
+            --accent-green: #15803d;
+            --accent-green-bg: #dcfce7;
+            --bg: #fdfbf7;
+            --card-bg: #ffffff;
+            --text: #1c1917;
+            --text-muted: #78716c;
+            --border: #e7e5e4;
+            --radius: 12px;
+            --shadow: 0 2px 6px rgba(0,0,0,0.04);
+          }
+          EOF
+
+          cat << 'EOF' > css/layout.css
+          * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+          body { background: var(--bg); color: var(--text); padding-bottom: 70px; }
+          .container { max-width: 680px; margin: 0 auto; padding: 14px; }
+          header { background: var(--primary); color: white; padding: 14px 18px; position: sticky; top: 0; z-index: 20; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+          .header-title { font-size: 1.25rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+          .header-actions { display: flex; gap: 8px; }
+          .hidden { display: none !important; }
+          EOF
+
+          cat << 'EOF' > css/components.css
+          .btn { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 700; font-size: 0.95rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+          .btn:active { background: var(--primary-hover); }
+          .btn-secondary { background: #e7e5e4; color: #44403c; }
+          .btn-green { background: var(--accent-green); color: white; }
+          .btn-danger { background: #fee2e2; color: #b91c1c; }
+          .btn-sm { padding: 6px 12px; font-size: 0.85rem; }
+
+          /* Category Pills */
+          .category-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 8px 0 14px 0; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+          .category-scroll::-webkit-scrollbar { display: none; }
+          .cat-pill { padding: 6px 14px; border-radius: 20px; background: white; border: 1.5px solid var(--border); font-size: 0.85rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; cursor: pointer; }
+          .cat-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+          /* Recipe Cards */
+          .recipe-card { background: var(--card-bg); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); box-shadow: var(--shadow); cursor: pointer; }
+          .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+          .card-title { font-size: 1.15rem; font-weight: 700; }
+          .card-tag { font-size: 0.75rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: #ffedd5; color: var(--primary); text-transform: uppercase; }
+          .card-meta { display: flex; gap: 10px; font-size: 0.82rem; color: var(--text-muted); align-items: center; }
+          .cooked-badge { background: var(--accent-green-bg); color: var(--accent-green); font-weight: 700; padding: 2px 7px; border-radius: 4px; font-size: 0.75rem; }
+
+          /* Modals */
+          .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
+          @media (min-width: 600px) { .modal-overlay { align-items: center; padding: 20px; } }
+          .modal-content { background: white; width: 100%; max-width: 620px; border-radius: 16px 16px 0 0; max-height: 90vh; overflow-y: auto; padding: 20px; }
+          @media (min-width: 600px) { .modal-content { border-radius: 16px; } }
+          .form-group { margin-bottom: 14px; }
+          label { display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 6px; color: #44403c; }
+          input, select, textarea { width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 1rem; }
+          input:focus, textarea:focus { border-color: var(--primary); outline: none; }
+          EOF
+
+          cat << 'EOF' > css/cooking.css
+          .scaler-container { background: #fff7ed; border: 1px solid #ffedd5; border-radius: var(--radius); padding: 14px; margin: 14px 0; }
+          .scaler-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+          .scaler-title { font-size: 0.85rem; font-weight: 800; color: var(--primary); text-transform: uppercase; }
+          .scale-btn-group { display: flex; gap: 6px; }
+          .scale-opt-btn { flex: 1; padding: 8px; background: white; border: 1.5px solid #fed7aa; border-radius: 8px; font-weight: 700; color: var(--primary); cursor: pointer; text-align: center; }
+          .scale-opt-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+          .ingredient-row { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 1rem; display: flex; justify-content: space-between; background: white; }
+          .ingredient-row:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+          .ingredient-row:last-child { border-bottom: none; border-radius: 0 0 var(--radius) var(--radius); }
+          .step-row { margin-bottom: 16px; line-height: 1.55; color: #292524; font-size: 1rem; padding-left: 8px; }
+
+          .scratchpad-box { margin-top: 24px; background: #fefce8; border: 1.5px dashed #fef08a; border-radius: var(--radius); padding: 14px; }
+          .scratchpad-box textarea { background: transparent; border: none; resize: vertical; min-height: 70px; font-size: 0.95rem; }
+          EOF
+
+          # 3. FIREBASE CONFIG & CLIENT
+          cat << 'EOF' > src/config/firebase.js
+          import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+          import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+          export const firebaseConfig = {
+            apiKey: "YOUR_API_KEY_HERE",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            projectId: "YOUR_PROJECT",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "...",
+            appId: "..."
+          };
+
+          export const isCloudEnabled = firebaseConfig.apiKey !== "YOUR_API_KEY_HERE";
+
+          let db = null;
+          if (isCloudEnabled) {
+            try {
+              const app = initializeApp(firebaseConfig);
+              db = getFirestore(app);
+            } catch (err) {
+              console.error("Firebase init failed:", err);
+            }
+          }
+
+          export { db };
+          EOF
+
+          # 4. SERVICES
+          cat << 'EOF' > src/services/scaler.js
+          export function scaleLine(line, factor) {
+            if (factor === 1) return line;
+
+            // Match mixed fractions: "1 1/2 cups"
+            const mixed = line.match(/^(\d+)\s+(\d+)\/(\d+)(.*)/);
+            if (mixed) {
+              const val = (parseInt(mixed[1]) + parseInt(mixed[2]) / parseInt(mixed[3])) * factor;
+              return formatNum(val) + mixed[4];
+            }
+
+            // Match simple fractions: "1/2 tsp"
+            const frac = line.match(/^(\d+)\/(\d+)(.*)/);
+            if (frac) {
+              const val = (parseInt(frac[1]) / parseInt(frac[2])) * factor;
+              return formatNum(val) + frac[3];
+            }
+
+            // Match decimals / whole numbers: "2.5" or "2"
+            const num = line.match(/^(\d*\.?\d+)(.*)/);
+            if (num && num[1]) {
+              const val = parseFloat(num[1]) * factor;
+              return formatNum(val) + num[2];
+            }
+
+            return line;
+          }
+
+          function formatNum(val) {
+            val = Math.round(val * 100) / 100;
+            const whole = Math.floor(val);
+            const remainder = val - whole;
+
+            const fractions = [
+              { val: 0.125, text: "1/8" },
+              { val: 0.25, text: "1/4" },
+              { val: 0.333, text: "1/3" },
+              { val: 0.5, text: "1/2" },
+              { val: 0.666, text: "2/3" },
+              { val: 0.75, text: "3/4" }
+            ];
+
+            if (remainder < 0.05) return whole === 0 ? "0" : `${whole}`;
+            if (remainder > 0.95) return `${whole + 1}`;
+
+            const match = fractions.find(f => Math.abs(remainder - f.val) < 0.06);
+            if (match) {
+              return whole > 0 ? `${whole} ${match.text}` : match.text;
+            }
+
+            return parseFloat(val.toFixed(2)).toString();
+          }
+          EOF
+
+          cat << 'EOF' > src/services/noteParser.js
+          export function parseMessyNote(rawText) {
+            const lines = rawText.split("\n").map(l => l.trim()).filter(Boolean);
+            if (!lines.length) return null;
+
+            const title = lines[0].replace(/^#+\s*/, "").slice(0, 60);
+            const ingredients = [];
+            const steps = [];
+
+            let inSteps = false;
+            const measureWords = ["cup", "cups", "tbsp", "tsp", "oz", "lb", "g", "ml", "pinch", "clove", "cloves", "can"];
+
+            for (let i = 1; i < lines.length; i++) {
+              const line = lines[i];
+              const lower = line.toLowerCase();
+
+              if (lower.includes("instruction") || lower.includes("directions") || lower.includes("steps:") || lower.includes("method:")) {
+                inSteps = true;
+                continue;
+              }
+
+              const startsWithNumber = /^(\d|\d\/\d)/.test(line);
+              const hasMeasure = measureWords.some(w => lower.includes(w));
+
+              if (inSteps || (!hasMeasure && !startsWithNumber && line.length > 35)) {
+                steps.push(line.replace(/^\d+[\.\)]\s*/, ""));
+              } else {
+                ingredients.push(line.replace(/^[-*•]\s*/, ""));
+              }
+            }
+
+            let category = "General";
+            const fullText = rawText.toLowerCase();
+            if (fullText.includes("chicken") || fullText.includes("turkey")) category = "Poultry";
+            else if (fullText.includes("beef") || fullText.includes("steak") || fullText.includes("pork")) category = "Beef/Pork";
+            else if (fullText.includes("salmon") || fullText.includes("shrimp") || fullText.includes("fish")) category = "Seafood";
+            else if (fullText.includes("pasta") || fullText.includes("spaghetti")) category = "Pasta";
+            else if (fullText.includes("flour") && (fullText.includes("bake") || fullText.includes("cookie") || fullText.includes("cake"))) category = "Baking";
+            else if (fullText.includes("egg") || fullText.includes("pancake")) category = "Breakfast";
+
+            return {
+              title: title || "New Recipe",
+              category,
+              servings: 4,
+              time: "30 mins",
+              ingredients: ingredients.length ? ingredients : ["1 portion main ingredient"],
+              steps: steps.length ? steps : ["Cook ingredients until ready."],
+              notes: ""
+            };
+          }
+          EOF
+
+          cat << 'EOF' > src/services/cookTracker.js
+          export function formatLastCooked(timestamp) {
+            if (!timestamp) return "Never cooked";
+            const diffDays = Math.floor((Date.now() - timestamp) / (1000 * 60 * 60 * 24));
+            if (diffDays === 0) return "Cooked today!";
+            if (diffDays === 1) return "Cooked yesterday";
+            if (diffDays < 30) return `${diffDays} days ago`;
+            return `Over a month ago`;
+          }
+          EOF
+
+          cat << 'EOF' > src/services/db.js
+          import { db, isCloudEnabled } from "../config/firebase.js";
+          import { collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+          const LOCAL_KEY = "filcat_recipes";
+
+          export function initRecipeSync(onUpdate) {
+            if (isCloudEnabled && db) {
+              const colRef = collection(db, "recipes");
+              return onSnapshot(colRef, (snapshot) => {
+                const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                onUpdate(list);
+              });
+            } else {
+              const local = JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]");
+              onUpdate(local);
+              return () => {};
+            }
+          }
+
+          export async function saveRecipeItem(recipe) {
+            if (isCloudEnabled && db) {
+              const ref = doc(db, "recipes", recipe.id);
+              await setDoc(ref, recipe, { merge: true });
+            } else {
+              const local = JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]");
+              const idx = local.findIndex(r => r.id === recipe.id);
+              if (idx >= 0) local[idx] = recipe;
+              else local.unshift(recipe);
+              localStorage.setItem(LOCAL_KEY, JSON.stringify(local));
+            }
+          }
+
+          export async function deleteRecipeItem(id) {
+            if (isCloudEnabled && db) {
+              await deleteDoc(doc(db, "recipes", id));
+            } else {
+              let local = JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]");
+              local = local.filter(r => r.id !== id);
+              localStorage.setItem(LOCAL_KEY, JSON.stringify(local));
+            }
+          }
+          EOF
+
+          # 5. STATE
+          cat << 'EOF' > src/state/store.js
+          export const store = {
+            recipes: [],
+            activeRecipeId: null,
+            activeCategory: "All",
+            currentScale: 1,
+            view: "list", // 'list' | 'detail'
+            listeners: [],
+
+            subscribe(fn) {
+              this.listeners.push(fn);
+            },
+            notify() {
+              this.listeners.forEach(fn => fn(this));
+            },
+            setRecipes(list) {
+              this.recipes = list;
+              this.notify();
+            },
+            setActiveCategory(cat) {
+              this.activeCategory = cat;
+              this.notify();
+            },
+            openDetail(id) {
+              this.activeRecipeId = id;
+              this.currentScale = 1;
+              this.view = "detail";
+              this.notify();
+            },
+            showList() {
+              this.view = "list";
+              this.notify();
+            },
+            setScale(scale) {
+              this.currentScale = scale;
+              this.notify();
+            }
+          };
+          EOF
+
+          # 6. COMPONENTS
+          cat << 'EOF' > src/components/CategoryPills.js
+          import { store } from "../state/store.js";
+
+          const CATEGORIES = ["All", "Poultry", "Beef/Pork", "Seafood", "Pasta", "Baking", "Breakfast", "Vegetarian", "Quick (<30m)"];
+
+          export function renderCategoryPills(container) {
+            container.innerHTML = CATEGORIES.map(cat => `
+              <button class="cat-pill ${store.activeCategory === cat ? 'active' : ''}" data-cat="${cat}">${cat}</button>
+            `).join("");
+
+            container.querySelectorAll(".cat-pill").forEach(btn => {
+              btn.onclick = () => store.setActiveCategory(btn.dataset.cat);
+            });
+          }
+          EOF
+
+          cat << 'EOF' > src/components/RecipeCard.js
+          import { formatLastCooked } from "../services/cookTracker.js";
+          import { store } from "../state/store.js";
+
+          export function renderRecipeCard(recipe) {
+            const card = document.createElement("div");
+            card.className = "recipe-card";
+            card.onclick = () => store.openDetail(recipe.id);
+
+            const cookedBadge = recipe.lastCooked 
+              ? `<span class="cooked-badge">${formatLastCooked(recipe.lastCooked)}</span>` 
+              : `<span>Never cooked</span>`;
+
+            card.innerHTML = `
+              <div class="card-header">
+                <div class="card-title">${recipe.title}</div>
+                <div class="card-tag">${recipe.category || 'General'}</div>
+              </div>
+              <div class="card-meta">
+                <span>⏱ ${recipe.time || 'N/A'}</span>
+                <span>•</span>
+                ${cookedBadge}
+              </div>
+            `;
+            return card;
+          }
+          EOF
+
+          cat << 'EOF' > src/components/RecipeDetail.js
+          import { store } from "../state/store.js";
+          import { scaleLine } from "../services/scaler.js";
+          import { saveRecipeItem, deleteRecipeItem } from "../services/db.js";
+          import { formatLastCooked } from "../services/cookTracker.js";
+
+          export function renderRecipeDetail(container) {
+            const recipe = store.recipes.find(r => r.id === store.activeRecipeId);
+            if (!recipe) return store.showList();
+
+            container.innerHTML = `
+              <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+                <button class="btn btn-secondary btn-sm" id="btn-back">← All Recipes</button>
+                <div style="display:flex; gap:6px;">
+                  <button class="btn btn-green btn-sm" id="btn-cooked">🍳 Cooked Today!</button>
+                  <button class="btn btn-danger btn-sm" id="btn-delete">Delete</button>
+                </div>
+              </div>
+
+              <h2 style="font-size:1.6rem; font-weight:800; margin-bottom:6px;">${recipe.title}</h2>
+              <div class="card-meta" style="margin-bottom:16px;">
+                <span class="card-tag">${recipe.category}</span>
+                <span>⏱ ${recipe.time}</span>
+                <span class="cooked-badge">${formatLastCooked(recipe.lastCooked)}</span>
+              </div>
+
+              <!-- SCALER -->
+              <div class="scaler-container">
+                <div class="scaler-header">
+                  <div class="scaler-title">Recipe Scale</div>
+                  <span style="font-weight:700; color:var(--primary); font-size:0.9rem;">${store.currentScale}x Multiplier</span>
+                </div>
+                <div class="scale-btn-group">
+                  <button class="scale-opt-btn ${store.currentScale === 0.5 ? 'active' : ''}" data-scale="0.5">0.5x</button>
+                  <button class="scale-opt-btn ${store.currentScale === 1 ? 'active' : ''}" data-scale="1">1x</button>
+                  <button class="scale-opt-btn ${store.currentScale === 1.5 ? 'active' : ''}" data-scale="1.5">1.5x</button>
+                  <button class="scale-opt-btn ${store.currentScale === 2 ? 'active' : ''}" data-scale="2">2x</button>
+                  <button class="scale-opt-btn ${store.currentScale === 3 ? 'active' : ''}" data-scale="3">3x</button>
+                </div>
+              </div>
+
+              <h3 style="margin:20px 0 10px; font-weight:800;">Ingredients</h3>
+              <div style="border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;">
+                ${recipe.ingredients.map(ing => `
+                  <div class="ingredient-row">
+                    <span>${scaleLine(ing, store.currentScale)}</span>
+                  </div>
+                `).join("")}
+              </div>
+
+              <h3 style="margin:24px 0 10px; font-weight:800;">Instructions</h3>
+              <ol style="padding-left:18px;">
+                ${recipe.steps.map(s => `<li class="step-row">${s}</li>`).join("")}
+              </ol>
+
+              <!-- INLINE CHEF SCRATCHPAD -->
+              <div class="scratchpad-box">
+                <div style="font-weight:800; font-size:0.85rem; color:#854d0e; text-transform:uppercase; margin-bottom:6px;">Chef's Kitchen Scratchpad</div>
+                <textarea id="scratchpad-input" placeholder="Quick notes while cooking... (auto-saves)">${recipe.notes || ''}</textarea>
+              </div>
+            `;
+
+            container.querySelector("#btn-back").onclick = () => store.showList();
+            
+            container.querySelector("#btn-cooked").onclick = async () => {
+              recipe.lastCooked = Date.now();
+              recipe.timesCooked = (recipe.timesCooked || 0) + 1;
+              await saveRecipeItem(recipe);
+              renderRecipeDetail(container);
+            };
+
+            container.querySelector("#btn-delete").onclick = async () => {
+              if (confirm("Delete this recipe?")) {
+                await deleteRecipeItem(recipe.id);
+                store.showList();
+              }
+            };
+
+            container.querySelectorAll(".scale-opt-btn").forEach(btn => {
+              btn.onclick = () => store.setScale(parseFloat(btn.dataset.scale));
+            });
+
+            const pad = container.querySelector("#scratchpad-input");
+            pad.onblur = async () => {
+              recipe.notes = pad.value;
+              await saveRecipeItem(recipe);
+            };
+          }
+          EOF
+
+          # 7. MAIN ENTRY POINT & HTML
+          cat << 'EOF' > src/main.js
+          import { store } from "./state/store.js";
+          import { initRecipeSync, saveRecipeItem } from "./services/db.js";
+          import { parseMessyNote } from "./services/noteParser.js";
+          import { renderCategoryPills } from "./components/CategoryPills.js";
+          import { renderRecipeCard } from "./components/RecipeCard.js";
+          import { renderRecipeDetail } from "./components/RecipeDetail.js";
+          import { isCloudEnabled } from "./config/firebase.js";
+
+          const app = document.getElementById("app");
+
+          // Sync indicator
+          document.getElementById("sync-status").innerText = isCloudEnabled ? "☁️ Cloud Synced" : "💾 Local Storage";
+
+          // Subscribe to database changes
+          initRecipeSync((list) => {
+            if (!list.length && !localStorage.getItem("filcat_initialized")) {
+              const starter = {
+                id: "rec-" + Date.now(),
+                title: "Classic Diner Pancakes",
+                category: "Breakfast",
+                servings: 4,
+                time: "20 mins",
+                ingredients: ["2 cups flour", "1 1/2 cups milk", "2 eggs", "1/2 tsp salt", "2 tbsp melted butter"],
+                steps: ["Mix dry ingredients.", "Whisk milk and eggs.", "Combine gently.", "Cook on buttered skillet."],
+                notes: "Great with blueberries added directly on skillet.",
+                lastCooked: null,
+                timesCooked: 0
+              };
+              saveRecipeItem(starter);
+              localStorage.setItem("filcat_initialized", "true");
+            }
+            store.setRecipes(list);
+          });
+
+          // State change re-render
+          store.subscribe(() => {
+            const listSection = document.getElementById("section-list");
+            const detailSection = document.getElementById("section-detail");
+
+            if (store.view === "list") {
+              listSection.classList.remove("hidden");
+              detailSection.classList.add("hidden");
+
+              renderCategoryPills(document.getElementById("category-container"));
+
+              const cardsContainer = document.getElementById("cards-container");
+              cardsContainer.innerHTML = "";
+
+              const filtered = store.recipes.filter(r => {
+                return store.activeCategory === "All" || r.category === store.activeCategory;
+              });
+
+              filtered.forEach(r => {
+                cardsContainer.appendChild(renderRecipeCard(r));
+              });
+            } else {
+              listSection.classList.add("hidden");
+              detailSection.classList.remove("hidden");
+              renderRecipeDetail(detailSection);
+            }
+          });
+
+          // Note Importer Handlers
+          const importModal = document.getElementById("modal-import");
+          document.getElementById("btn-open-import").onclick = () => importModal.classList.remove("hidden");
+          document.getElementById("btn-close-import").onclick = () => importModal.classList.add("hidden");
+
+          document.getElementById("btn-run-import").onclick = async () => {
+            const raw = document.getElementById("input-raw-notes").value;
+            const parsed = parseMessyNote(raw);
+            if (parsed) {
+              parsed.id = "rec-" + Date.now();
+              await saveRecipeItem(parsed);
+              importModal.classList.add("hidden");
+              document.getElementById("input-raw-notes").value = "";
+              store.openDetail(parsed.id);
+            }
+          };
+          EOF
+
+          cat << 'EOF' > index.html
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+            <meta name="theme-color" content="#c2410c">
+            <title>FilCat Kitchen</title>
+            <link rel="manifest" href="manifest.json">
+            <link rel="stylesheet" href="css/variables.css">
+            <link rel="stylesheet" href="css/layout.css">
+            <link rel="stylesheet" href="css/components.css">
+            <link rel="stylesheet" href="css/cooking.css">
+          </head>
+          <body>
+
+            <header>
+              <div class="header-title">🍳 FilCat Kitchen</div>
+              <div class="header-actions">
+                <span id="sync-status" style="font-size:0.75rem; background:rgba(255,255,255,0.2); padding:4px 8px; border-radius:12px; align-self:center;"></span>
+                <button class="btn btn-sm btn-secondary" id="btn-open-import">📋 Paste Note</button>
+              </div>
+            </header>
+
+            <div class="container" id="app">
+              
+              <!-- LIST VIEW -->
+              <div id="section-list">
+                <div class="category-scroll" id="category-container"></div>
+                <div id="cards-container"></div>
+              </div>
+
+              <!-- DETAIL COOKING VIEW -->
+              <div id="section-detail" class="hidden"></div>
+
+            </div>
+
+            <!-- RAW NOTE TRANSLATOR MODAL -->
+            <div id="modal-import" class="modal-overlay hidden">
+              <div class="modal-content">
+                <h3 style="margin-bottom:8px; font-weight:800;">Paste Recipe Note</h3>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">Paste raw text from your notes. FilCat will automatically parse ingredients, steps, and categorize it.</p>
+                <textarea id="input-raw-notes" rows="8" placeholder="Grandma's Stew&#10;2 lbs chuck beef cubed&#10;1 onion diced&#10;Brown beef in Dutch oven. Add vegetables and simmer 2 hours."></textarea>
+                <div style="display:flex; gap:10px; margin-top:14px;">
+                  <button class="btn btn-secondary" style="flex:1;" id="btn-close-import">Cancel</button>
+                  <button class="btn" style="flex:1;" id="btn-run-import">Translate & Save</button>
+                </div>
+              </div>
+            </div>
+
+            <script type="module" src="src/main.js"></script>
+          </body>
+          </html>
+          EOF
+
+          # Self-cleanup: remove workflow in the same commit
+          rm -f .github/workflows/scaffold.yml
+
+          # Git commit and push
+          git config user.name "FilCat Scaffolder"
+          git config user.email "scaffolder@filcat.local"
+          git add -A
+          git commit -m "Scaffold FilCat Kitchen modular architecture"
+          git push origin main
